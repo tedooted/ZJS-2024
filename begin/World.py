@@ -15,6 +15,9 @@ class World(object):
 		self.__separator = '.'
 		self.__plague_mode = False
 		self.__plague_turns_left = 0
+		self.__min_population = 2
+		self.__max_population = 5
+		
 
 	@property
 	def worldX(self):
@@ -83,9 +86,11 @@ class World(object):
 		self.turn += 1
 
 		if self.__plague_mode:
-			self.__plague_turns_left -= 1
+			self.__plague_turns_left -= 2
 			if self.__plague_turns_left <= 0:
 				self.__plague_mode = False
+
+		self.enforce_conservation_rules()
 
 	def makeMove(self, action):
 		print(action)
@@ -171,4 +176,35 @@ class World(object):
 
 	def apply_plague_mode(self):
 		for o in self.organisms:
-			o.liveLength = max(1, o.liveLength//2)
+			o.liveLength = max(1, o.liveLength/2)
+	def is_position_free(self, position):
+			if not self.positionOnBoard(position):
+				return False
+			return self.getOrganismFromPosition(position) is None
+			
+	def find_free_position(self):
+		for y in range(self.__worldY):
+			for x in range(self.__worldX):
+				pos = Position(x, y)
+				if self.is_position_free(pos):
+					return None
+		return None
+		
+	def enforce_conservation_rules(self):
+			species_counts = {}
+			for organism in self.__organisms:
+				species = type(organism).__name__
+				species_counts[species] = species_counts.get(species, 0) + 1
+
+			for species, count in species_counts.items():
+				if count > self.__max_population:
+					self.remove_excess_organisms(species, count - self.__max_population)
+
+	def remove_excess_organisms(self, species, excess_count):
+			removed = 0
+			for organism in self.__organisms:
+				if removed >= excess_count:
+					break
+				if type(organism).__name__ == species:
+					self.__organisms.remove(organism)
+					removed += 1

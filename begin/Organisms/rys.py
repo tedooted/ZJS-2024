@@ -14,3 +14,6 @@ class Rys(Animal):
         self.liveLength = 18
         self.powerToReproduce = 14
         self.sign = 'R'
+
+    def getNeighboringPosition(self):
+	    return self.world.filterPositionsWithoutAnimals(self.world.getNeighboringPositions(self.position))
